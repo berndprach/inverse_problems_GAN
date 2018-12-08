@@ -30,6 +30,7 @@ The dataset I used for the following was a subset of (5 of the classes of) the c
 
     
 ![input2](results/colouring_cifar5_inputs.png)
+![arrow2](results/for_gan_git.png)
 ![result2](results/colouring_cifar5_results.png)
 
 
