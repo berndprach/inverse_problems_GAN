@@ -1,7 +1,6 @@
 # Solving inverse problems using a DCGAN in Tensorflow
 
-Based on work from my [Part III essay]
-(https://drive.google.com/open?id=1V5S_EPCBNptCq54BXGLzbgWr2sGbvwHX), 
+Based on work from my [Part III essay](https://drive.google.com/open?id=1V5S_EPCBNptCq54BXGLzbgWr2sGbvwHX), 
 I designed framework that is based on a GAN
 and can solve various inverse problems on pictures.
 Some examples are below.
