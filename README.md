@@ -51,11 +51,12 @@ but a whole distribution of possible solutions:
     
 ## Flexible inpainting
 I also trained the model to do flexible inpainting,
-where the missing parts of the picture are not known in advance of training and are different for each picture.
+where the missing parts of the picture are not known in advance of training and are different for each picture.<br\>
+Furthermore results are still not close to looking natureal, work in progress.
 
     python main.py --crop --train_size 60000 --problem_name problems.flexible_inpainting --epoch=8 --train
 
 ![input5](results/flexible_inpainting_celebA_inputs.png)
 ![arrow5](results/arrow.png)
-![result5](results/lexible_inpainting_results.png)
+![result5](results/flexible_inpainting_celebA_results.png)
 
