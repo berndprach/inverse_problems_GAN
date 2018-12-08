@@ -19,6 +19,7 @@ First, download dataset with:
     $ python main.py --crop --train_size 60000 --problem_name problems.center_inpainting --nrof_epochs 16 --train
     
 ![input1](results/center_inpainting_celebA_inputs.png)
+![arrow1](results/for_gan_git.png)
 ![result1](results/center_inpainting_celebA_results.png)
 
 ## Colouring
