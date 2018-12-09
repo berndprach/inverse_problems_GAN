@@ -42,13 +42,17 @@ on pictures centered before downsampling. This makes the task easier than usual.
 ![result3](results/upsampling_celebA_results.png)
 
 ## Picture extension
-
 When the model is trained with the right hyperparameters, 
-the nice thing is that it does't only create one solution to the corresponding problem,
-but a whole distribution of possible solutions:
+the special feature of this framework is that it does't only create one solution to the corresponding problem,
+but a whole distribution of possible solutions, as shown in the following picture: 
+(to produce the result the (usually random) vector z was varied with the same input.) 
 
-    Coming Soon
-    
+    python main.py --problem_name problems.upper_inpainting --dataset_name mnist --g_feature_dim 10 --train
+
+![input4](results/upper_inpainting_mnist_inputs.png)
+![arrow4](results/arrow.png)
+![result4](results/upper_inpainting_mnist_results.png)
+
 ## Flexible inpainting
 I also trained the model to do flexible inpainting,
 where the missing parts of the picture are not known in advance of training and are different for each picture.<br\>
