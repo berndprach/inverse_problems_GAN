@@ -9,15 +9,7 @@ from datetime import datetime
 import model
 import utils
 
-
-## TODO: #######
-# -tensorboard
-# -fancy vis (mixed for github)
-# -colour for vis
-################
-
 def main(args):
-  #assert args.crop
   
   if not os.path.exists(args.checkpoint_dir):
     os.makedirs(args.checkpoint_dir)
@@ -29,7 +21,6 @@ def main(args):
     if not os.path.exists('samples_progress/part{:1d}'.format(i+1)):
       os.makedirs('samples_progress/part{:1d}'.format(i+1))
   
-  #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
   run_config = tf.ConfigProto()
   run_config.gpu_options.allow_growth=True 
   
@@ -43,8 +34,6 @@ def main(args):
   with tf.Session(config=run_config) as sess:
     dcgan = model.DCGAN(sess, args)
 
-    #utils.show_all_variables()
-
     if args.train:
       dcgan.train()
       
@@ -57,8 +46,6 @@ def main(args):
     # Below is codes for visualization
     if args.vis_type == 0:
       vis_options = [6,7,9,10]
-      #vis_options = [0,1,4,6,9,10]
-      #vis_options = [6,9,10]
       for option in vis_options:
         print("Visualizing option %s" % option)
         OPTION = option
@@ -73,7 +60,7 @@ def parse_arguments(argv):
   parser = argparse.ArgumentParser()
     
   parser.add_argument("--nrof_epochs", type=int,
-    help="Epochs to train [25]", default=25)
+    help="Epochs to train [8]", default=8)
   parser.add_argument("--learning_rate", type=float,
     help="Learning rate of for adam [0.0002]", default=0.0002) 
   parser.add_argument("--beta1", type=float,
@@ -106,8 +93,7 @@ def parse_arguments(argv):
   parser.add_argument("--vis_type", type=int,
     help="Visualization option; 0=all. [0]", default=0)
   parser.add_argument("--lambda_loss", type=float,
-    #help="Coefficient of L1-loss. [100.]", default=100.)
-    help="Coefficient of L1-loss. [100.]", default=10.)
+    help="Coefficient of additional loss. [10.]", default=10.)
   parser.add_argument("--z_dim", type=int,
     help="Dimension of the random input. [100]", default=100)
   parser.add_argument("--g_feature_dim", type=int,
@@ -116,16 +102,16 @@ def parse_arguments(argv):
     help="Parameter for mask creation. [12]", default=12)
 
   parser.add_argument("--data_dir", type=str,
-    help="Directory name to load data. [data]", default="data") #../../../data
+    help="Directory name to load data. [data]", default="../../../data")
 
   parser.add_argument('--settings_file_name', type=str,
     help='Name (path) of the settings file.', default='settings.txt')
   parser.add_argument('--progress_file_name', type=str,
     help='Name (path) of the progress file.', default='progress.txt')    
   parser.add_argument('--problem_name', type=str,
-    help='Name (path) of the problem python file.', default='problems.problem') #'problems.flexible_inpainting'
+    help='Name (path) of the problem python file.', default='problems.problem')
   parser.add_argument('--save_freq', type=int,
-    help='How often picuteres are saved.', default=100) #'problems.flexible_inpainting'
+    help='How often picuteres are saved.', default=100)
     
   # Output Args
   args = parser.parse_args(argv)

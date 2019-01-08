@@ -263,86 +263,6 @@ def visualize(sess, dcgan, option, generate_gif = False, save_input = False):
       #save_images(merged, './samples/test_v6_merged_samples_%s.png' % (idx))
       save_images(merged, './samples/test_v6_merged_samples_%s.png' % (idx), out_dim=[256,256])
       save_multiple(4, [sample_images, s_g_in_save, samples, merged],'test_v6_process_%s' % (idx))     
-  elif option == 7: ##Save 4x4(6x6) image of merged samples (not coloured). 
-    """batch_size = dcgan.args.batch_size
-    
-    for idx in xrange(min(8,int(np.floor(1000/batch_size)))):
-      print(" [*] %d" % idx)
-      
-      sample_images = get_img(dcgan, idx*batch_size, batch_size, dcgan.args.dataset_name, test=True)
-      sample_masks = create_masks(dcgan)
-      sample_g_input = dcgan.tform(sample_images,sample_masks)
-      
-      sample_z = np.random.uniform(-1, 1, size=(batch_size , dcgan.args.z_dim))
-      
-      samples = sess.run(dcgan.sampler, \
-            feed_dict={dcgan.z: sample_z, dcgan.g_input: sample_g_input, dcgan.inputs: sample_images, dcgan.mask: sample_masks })
-
-      merged = dcgan.merge(samples, sample_g_input, sample_masks)
-            
-      if dcgan.args.dataset_name == 'mnist':
-        merged_subset = merged[0:36]
-        save_images(merged_subset, [6, 6, 3], './samples/test_v7_merged_samples_%s.png' % (idx))      
-      else:
-        merged_subset = merged[0:16]
-        save_images(merged_subset, [4, 4, 3], './samples/test_v7_merged_samples_%s.png' % (idx))"""           
-  elif option == 8: ##different values of z. Version to avoid batch normalization effect if this causes troubles"
-    """batch_size = dcgan.args.batch_size
-    length = int(np.sqrt(dcgan.args.batch_size))
-    
-    sample_inputs0, sample_img0, sample_labels0 = get_img(dcgan, 0, batch_size, dcgan.args.dataset_name, test=True)
-    
-    class_z = np.random.randint(2, size=dcgan.args.z_dim)
-    values = np.linspace(-1., 1., num=length)
-    z_values = np.empty((0,dcgan.args.z_dim))
-      
-    for i in range(length): #create z
-      for j in range(length):
-        z_values = np.append(z_values, [class_z * values[i] + (1-class_z) * values[j]], axis=0)
-    
-    shuff = np.zeros((0,batch_size)) #2nd column: permutations of 0:63
-    for i in xrange(batch_size):
-      x = np.arange(batch_size)
-      random.shuffle(x)
-      shuff = np.append(shuff, [x], axis=0).astype(int)
-    
-    all_samples = np.empty((batch_size,batch_size,dcgan.args.output_height,dcgan.args.output_width,dcgan.args.c_dim))
-    
-    for idx in xrange(batch_size): #over all noice variations.
-      print(" [*] %d" % idx) #(old problem: Batch normalisation!!!!!!!)
-    
-      sample_inputs = sample_inputs0
-      sample_labels = sample_labels0
-      sample_img = sample_img0
-      
-      #Standard:
-      #sample_z = np.repeat([z_values[idx]], dcgan.args.batch_size, axis=0)
-      #print("first z_values:")
-      #print(z_values[idx,1:12])
-      #In case z gets caught in batch normalisation:
-      #sample_z = np.random.uniform(-1, 1, size=(batch_size , dcgan.args.z_dim))
-      #sample_z[0,:] = z_values[idx]
-      
-      sample_z = np.zeros((batch_size,dcgan.args.z_dim))
-      for i in range(batch_size):
-        z = z_values[shuff[i,idx]]        
-        sample_z[i,:] = z        
-      
-      if dcgan.args.dataset_name == "mnist" and config.use_labels:
-        samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: sample_z, dcgan.img: sample_img, dcgan.y: sample_labels})     
-      else:
-        samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: sample_z, dcgan.img: sample_img })     
-      
-      for i in range(batch_size):
-        all_samples[i,shuff[i,idx],:,:,:] = np.copy(samples[i])
-      
-    for idx in range(batch_size):
-      
-      samples = all_samples[idx,:,:,:,:]
-      
-      col_img = colour_samples(samples, dcgan.args.dataset_name, dcgan.args.img_height)
-      
-      save_images(col_img, [image_frame_dim, image_frame_dim, 3], './samples/test_v8_diffz_%s.png' % (idx))"""  
   elif option == 9: #different values of z.
     batch_size = dcgan.args.batch_size
     length = int(np.sqrt(dcgan.args.batch_size))
@@ -365,14 +285,17 @@ def visualize(sess, dcgan, option, generate_gif = False, save_input = False):
     
       sample_images = np.repeat([sample_images0[idx]], batch_size, axis=0)
       sample_g_inputs = np.repeat([sample_g_inputs0[idx]], batch_size, axis=0)
-      #sample_tform_info = np.repeat([sample_tform_info0[idx]], batch_size, axis=0) 
+      sample_tform_info = np.repeat([sample_tform_info0[idx]], batch_size, axis=0) 
       
       samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_values, dcgan.g_inputs: sample_g_inputs})
             
-      save_images(samples, './samples/test_v9_diffz_%s.png' % (idx))
+      #save_images(samples, './samples/test_v9_diffz_%s.png' % (idx))
+      merged = dcgan.Problem.merge(samples, sample_g_inputs, sample_tform_info)
+      save_images(merged, './samples/test_v9_diffz_m_%s.png' % (idx))
       
       if idx < 8 and save_input:
-        save_images(samples, './samples/test_v9_viz_%s.png' % (idx), out_dim=[256,256])
+        #save_images(samples, './samples/test_v9_viz_%s.png' % (idx), out_dim=[256,256])
+        save_images(merged, './samples/test_v9_viz_m_%s.png' % (idx), out_dim=[256,256])
         save_images(dcgan.Problem.safe_format(sample_g_inputs), './samples/test_v9_viz_%s_inputs.png' % (idx), out_dim=[256,256])
   elif option == 10: #Take pictures from samples_progress and put them into one file.
     for i in range(8):
@@ -403,41 +326,6 @@ def visualize(sess, dcgan, option, generate_gif = False, save_input = False):
       #save_images(out_pics, [image_frame_dim, image_frame_dim], './samples_progress/progress{:1d}.png'.format(i+1))
       #save_images(out_pics, [8, 8], './samples_progress/progress{:1d}.png'.format(i+1))
       save_images(out_pics, './samples_progress/progress{:1d}.png'.format(i+1))      
-  elif option == 11: #Save pictures centered and aligned in ./data_aligned
-    """
-    if True: #training data
-      if not os.path.exists('data_aligned'):
-        os.makedirs('data_aligned')
-        
-      nr_samples = len(dcgan.data)
-      batch_size = dcgan.args.batch_size
-      print(nr_samples)
-      print(batch_size)
-      
-      batch_idxs = nr_samples // batch_size
-      for idx in range(batch_idxs):
-        sample_inputs, _, _ = get_img(dcgan, idx*batch_size, batch_size, dcgan.args.dataset_name, test=False)  
-        for i in range(batch_size):
-          pic_idx = idx*batch_size + i
-          save_images(sample_inputs[i:i+1:],
-                          './data_aligned/al{:06d}.jpg'.format(pic_idx+1))
-        print("Done [%s] out of [%s]" % (idx,batch_idxs))
-      '''                  
-      sample_inputs, _, _ = get_img(dcgan, 0, nr_samples, dcgan.args.dataset_name, test=False)
-      for pic_idx in range(nr_samples):
-        save_images(sample_inputs[pic_idx:pic_idx+1:], [1,1],
-                        './data_aligned/aligned{:03d}.jpg'.format(pic_idx+1))
-      '''
-    
-    if True: #test data   
-      if not os.path.exists('data_test_aligned'):
-        os.makedirs('data_test_aligned')
-      nr_samples = 1000    
-      sample_inputs, _, _ = get_img(dcgan, 0, nr_samples, dcgan.args.dataset_name, test=True)
-      for pic_idx in range(nr_samples):
-        save_images(sample_inputs[pic_idx:pic_idx+1:],
-                        './data_test_aligned/aligned{:03d}.jpg'.format(pic_idx+1)) """    
-  #elif option == 12: 
                         
 def standard_sample_dict(dcgan, sample_images):
     sample_tform_info = dcgan.Problem.create_tform_info(dcgan.args)
@@ -498,6 +386,9 @@ def save_multiple(nr, pictures, name):
 
   batch_size = pictures[0].shape[0]
   output = np.empty_like(pictures[0])
+  for i in range(1,nr): #to get max dimension
+    output = output + np.empty_like(pictures[i])
+
   
   nrof_i = batch_size // nr
   

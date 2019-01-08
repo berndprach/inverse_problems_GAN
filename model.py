@@ -120,9 +120,7 @@ class DCGAN(object):
     g_optim = tf.train.AdamOptimizer(self.args.learning_rate, beta1=self.args.beta1) \
               .minimize(self.g_loss, var_list=self.g_vars)
               
-    #tf.global_variables_initializer().run()
     self.sess.run(tf.global_variables_initializer(), feed_dict=None)
-    #? sess.run(tf.local_variables_initializer(), feed_dict={phase_train_placeholder:True})
     
     #self.g_sum = ops.merge_summary([self.z_sum, self.d__sum,
     #  self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
@@ -159,7 +157,6 @@ class DCGAN(object):
     #Set up for visualizing difference from z value
     z_range = utils.get_z_range(self.args.z_dim, self.args.batch_size)    
 
-    #nrof_batches = min(len(self.data_paths), self.args.train_size) // self.args.batch_size
     nrof_batches = self.args.train_size // self.args.batch_size
       
     counter = 0
@@ -177,7 +174,7 @@ class DCGAN(object):
                         "Loaded checkpoint " + str(counter) + "\n")
     else:
       print(" [!] Load failed...")
-      with open(self.args.progress_file_name,"a") as prog_file:
+      with open(self.args.progress_file_name,"w") as prog_file:
         prog_file.write("\n" + datetime.now().strftime("%H:%M:%S ") + \
                         "No checkpoint found, starting training from scratch.\n")
     for epoch0 in range(self.args.nrof_epochs):
@@ -205,11 +202,10 @@ class DCGAN(object):
                   self.g_tform_info: batch_tform_info}
         
 
-        #pre_err_G, pre_err_G_disc, pre_err_G_prob = \
-        #      self.sess.run([self.g_loss,self.g_disc_loss,self.g_prob_loss], feed_dict=G_dict)
-        
         # Update D network
-        self.sess.run(d_optim, feed_dict=D_dict)
+        _, err_D, err_G, err_G_disc, err_G_prob = \
+              self.sess.run([d_optim, self.d_loss, self.g_loss,self.g_disc_loss,self.g_prob_loss],
+                            feed_dict={**D_dict,**G_dict})
         #self.writer.add_summary(summary_str, counter)
 
         # Update G network
@@ -217,15 +213,12 @@ class DCGAN(object):
         #self.writer.add_summary(summary_str, counter)
 
         # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
-        _, err_D, err_G, err_G_disc, err_G_prob = \
-              self.sess.run([g_optim, self.d_loss, self.g_loss,self.g_disc_loss,self.g_prob_loss],
-                            feed_dict={**D_dict,**G_dict})
+        self.sess.run(g_optim, feed_dict=G_dict)
         #self.writer.add_summary(summary_str, counter)
 
         counter += 1
         time_str = time.strftime("%H:%M:%S",time.gmtime(time.time() - start_time))
         print("Epoch: [{:2d}] [{:4d}/{:4d}] time: {}, d_loss: {:6.4f}, g_loss: {:6.4f}" \
-          #.format(epoch, idx, nrof_batches, time_str, err_D/np.log(4), err_G))
           .format(epoch, idx, nrof_batches, time_str, err_D, err_G))
         #Should hold: errD <= log(4) ~ 1.39 (= error for random guessing)
         
@@ -235,7 +228,6 @@ class DCGAN(object):
         
           samples, samples_tformed, d_loss, g_loss = self.sess.run(
             [self.sampler, self.sampler_tformed, self.d_loss, self.g_loss], feed_dict=sample_dict)
-          #utils.save_images(samples, '{}/train_{:02d}_{:04d}_samples_s.png'.format(self.args.sample_dir, epoch, counter))
           utils.save_images(samples, '{}/train_{:02d}_{:04d}_samples_s.png'.format(self.args.sample_dir, epoch, idx))
           print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
           
@@ -254,7 +246,6 @@ class DCGAN(object):
         if np.mod(counter, 5*self.args.save_freq) == 0:
           self.save(self.args.checkpoint_dir, counter)
           
-          #batch_counter = counter % nrof_batches
           utils.save_multiple(2,[samples, sample_images], 'train_{:02d}_{:04d}_comp'.format(epoch, idx))
           save_pics = [sample_images, self.Problem.safe_format(sample_g_inputs), \
                         samples, self.Problem.safe_format(samples_tformed)]
@@ -282,8 +273,9 @@ class DCGAN(object):
                         self.d_inputs: vis_z_images,
                         self.g_tform_info: vis_z_tform_info}
         
-            samples = self.sess.run(self.sampler, feed_dict=vis_z_dict)
-            utils.save_images(samples, '{}/train_{:02d}_{:04d}_vis_z_{:01d}.png'.format(self.args.sample_dir, epoch, idx, input_idx))
+            vis_z_samples = self.sess.run(self.sampler, feed_dict=vis_z_dict)
+            vis_z_merged = self.Problem.merge(vis_z_samples, vis_z_g_inputs, vis_z_tform_info)
+            utils.save_images(vis_z_merged, '{}/train_{:02d}_{:04d}_vis_z_{:01d}.png'.format(self.args.sample_dir, epoch, idx, input_idx))
       
             print("Mean Standard deviation: " + str(np.mean(np.std(samples, axis=0))))
             
@@ -291,10 +283,7 @@ class DCGAN(object):
               prog_file.write("\tMean Standard deviation: " + \
                               str(np.mean(np.std(samples, axis=0))) + "\n")
               
-              
-          #TODO: 8 lines of (original, masked, z=0, z=0 merge, z=(-1,-1), z=(-1,1), z=(1,-1), z=(1,1))
       
-      #else: #(=Do, if loop finishes without error)
       #Visualize at the end of every epoch
       if epoch0<8:
         for i in range(8):
@@ -332,8 +321,6 @@ class DCGAN(object):
       
       bs = self.args.batch_size
       
-      #def conv_out_size_same(size, stride):
-      #  return int(math.ceil(float(size) / float(stride)))
       conv_out_size_same = lambda h, w, stride: [ int(math.ceil(s/stride)) for s in [h,w] ]
       
       s_h, s_w = self.args.output_height, self.args.output_width
@@ -395,12 +382,12 @@ class DCGAN(object):
       if self.args.dataset_name == "mnist":
         self.data_X, self.data_X_val = self.load_mnist()
       elif self.args.dataset_name == "cifar10":
-        #data = self.load_cfar10_batch(1)
+        #data = self.load_cifar10_batch(1)
         #self.data_X_val, self.data_X = data[:100], data[100:]        
-        self.data_X = self.load_cfar10_batch(1)
+        self.data_X = self.load_cifar10_batch(1)
         for i in range(2,6):
-          self.data_X = np.concatenate((self.data_X, self.load_cfar10_batch(i)), axis=0)
-        self.data_X_val = self.load_cfar10_batch("test")
+          self.data_X = np.concatenate((self.data_X, self.load_cifar10_batch(i)), axis=0)
+        self.data_X_val = self.load_cifar10_batch("test")
       if self.args.train_size is not None:
         self.data_X = self.data_X[:self.args.train_size]
       self.args.train_size = len(self.data_X)
@@ -427,19 +414,15 @@ class DCGAN(object):
 
     return trX/255., teX/255. 
    
-  #def load_cfar10_batch(cifar10_dataset_folder_path, batch_id):
-  def load_cfar10_batch(self, batch_id):
+  def load_cifar10_batch(self, batch_id):
     data_dir = os.path.join(self.args.data_dir, self.args.dataset_name, "cifar-10-batches-py")
-                            #"data_batch=" + str(batch_id))
     batch_name = "test_batch" if batch_id == "test" else "data_batch_" + str(batch_id)
     with open(os.path.join(data_dir,batch_name), mode='rb') as file:
       batch = pickle.load(file, encoding='latin1')
 
     features = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
     features = np.array(features).astype(np.float)
-    #features = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1).astype(np.float)
     labels = batch['labels']
-    #return features, labels
     
     labels = np.array(labels)
     
@@ -448,26 +431,6 @@ class DCGAN(object):
     
     return features/255.
    
-  """
-  def get_D_G_dicts(self, idx, input_placeholder, z_placeholder, g_input_placeholder, g_tform_info_placeholder):
-        batch_images = utils.get_img(self, idx*self.args.batch_size,
-                          self.args.batch_size, self.args.dataset, test=False)
-        
-        batch_tform_info = self.Problem.create_tform_info(self.args)
-        
-        batch_g_input = self.Problem.transform(batch_images, batch_tform_info)
-        
-        batch_z = np.random.uniform(-1, 1, [self.args.batch_size, self.args.z_dim]).astype(np.float32)
-
-        D_dict = {
-            self.inputs: batch_images,
-            self.z: batch_z,
-            self.g_input: batch_g_input}
-        G_dict = {
-            self.z: batch_z, 
-            self.g_input: batch_g_input,
-            self.g_tform_info: batch_tform_info}
-  """         
     
   @property
   def model_dir(self):
