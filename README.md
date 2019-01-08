@@ -12,7 +12,6 @@ https://github.com/carpedm20/DCGAN-tensorflow
 ## Center inpainting
 The architecture can be trained to recreate the center part of a picture.
 The code below was used to train the model that created the following picture:
-The model was trained using the following line:
 
     $ python main.py --crop --train_size 60000 --problem_name problems.center_inpainting --nrof_epochs 16 --train
     
@@ -43,7 +42,7 @@ on pictures centered before downsampling. This makes the task easier than usual.
 
 ## Picture extension
 When the model is trained with the right hyperparameters, 
-the special feature of this framework is that it does't only create one solution to the corresponding problem,
+the special feature of this framework is that it doesn't only create one solution to the corresponding problem,
 but a whole distribution of possible solutions, as shown in the following picture: 
 (to produce the result the (usually random) vector z was varied with the same input.) 
 
@@ -55,8 +54,8 @@ but a whole distribution of possible solutions, as shown in the following pictur
 
 ## Flexible inpainting
 I also trained the model to do flexible inpainting,
-where the missing parts of the picture are not known in advance of training and are different for each picture.<br\>
-Furthermore results are still not close to looking natureal, work in progress.
+where the missing parts of the picture are not known in advance of training and are different for each picture.<br />
+Unfortunately the results are not close to looking natural yet, work in progress.
 
     python main.py --crop --train_size 60000 --problem_name problems.flexible_inpainting --epoch=8 --train
 
